@@ -5,13 +5,18 @@ namespace WebAPI.Data
 {
     public class BookAppContext : DbContext
     {
-        public DbSet<User> Users { get; set; }
         public BookAppContext(DbContextOptions options) : base(options)
         { 
         }
 
-        protected BookAppContext()
+        public DbSet<User> Users { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>().ToTable("Users");
         }
+
     }
 }
