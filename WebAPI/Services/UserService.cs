@@ -45,9 +45,9 @@ public class UserService : IUserService
 
     public async Task<User?> LoginAsync(LoginRequest loginRequest)
     {
-        var email = loginRequest.Email.Trim().ToLowerInvariant();
+        var username = loginRequest.Username.Trim();
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         if (user == null || !_passwordService.Verify(loginRequest.Password, user.PasswordHash))
         {
             return null;

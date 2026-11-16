@@ -28,11 +28,11 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("api/auth/login", loginRequest);
+            var response = await _http.PostAsJsonAsync("api/login", loginRequest);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return "Invalid email or password";
+                return "Invalid username or password";
             }
 
             if (!response.IsSuccessStatusCode)
@@ -54,7 +54,7 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            await _http.PostAsync("api/auth/logout", null);
+            await _http.PostAsync("api/logout", null);
         }
         catch (HttpRequestException)
         { }
@@ -66,7 +66,7 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            var user = await _http.GetFromJsonAsync<UserResponse>("api/auth/me");
+            var user = await _http.GetFromJsonAsync<UserResponse>("api/me");
             return user == null ? Anonymous : CreateState(user);
         }
         catch (HttpRequestException)

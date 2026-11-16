@@ -9,7 +9,7 @@ using WebAPI.Services;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("api")]
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
 
         if (user == null)
         {
-            return Unauthorized("Invalid email or password");
+            return Unauthorized("Invalid username or password");
         }
 
         var claims = new List<Claim>
