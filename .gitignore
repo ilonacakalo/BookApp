@@ -366,3 +366,5 @@ FodyWeavers.xsd
 .env
 secrets.json
 appsettings.Development.json
+# JetBrains Rider
+.idea/

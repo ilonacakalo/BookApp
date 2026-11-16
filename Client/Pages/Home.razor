@@ -1,0 +1,25 @@
+@page "/home"
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Home</PageTitle>
+
+<div class="card shadow-sm p-4 w-100" style="max-width: 420px;">
+    <h1 class="h3 text-center mb-4">Welcome</h1>
+
+    <AuthorizeView>
+        <p class="text-center">
+            You are logged in as <strong>@context.User.Identity?.Name</strong>.
+        </p>
+    </AuthorizeView>
+
+    <button class="btn btn-outline-secondary w-100" @onclick="Logout">Log out</button>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthStateProvider.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}

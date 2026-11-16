@@ -1,0 +1,106 @@
+@page "/"
+@page "/register"
+@attribute [AllowAnonymous]
+@using System.Net
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Register</PageTitle>
+
+<div class="card shadow-sm p-4 w-100" style="max-width: 420px;">
+    <h1 class="h3 text-center mb-4">Register</h1>
+
+    <EditForm Model="model" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <InputText id="email" class="form-control" autocomplete="email" @bind-Value="model.Email" />
+            <ValidationMessage For="() => model.Email" />
+        </div>
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <InputText id="username" class="form-control" autocomplete="username" @bind-Value="model.Username" />
+            <ValidationMessage For="() => model.Username" />
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <InputText id="password" type="password" class="form-control" autocomplete="new-password" @bind-Value="model.Password" />
+            <ValidationMessage For="() => model.Password" />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" disabled="@isBusy">
+            @(isBusy ? "Registering..." : "Register")
+        </button>
+    </EditForm>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger mt-3 mb-0">@errorMessage</div>
+    }
+
+    @if (isSuccess)
+    {
+        <div class="alert alert-success mt-3 mb-0">Registration successful! Redirecting to login...</div>
+    }
+
+    <p class="text-center mt-3 mb-0">
+        Already have an account? <a href="login">Log in</a>
+    </p>
+</div>
+
+@code {
+    private RegisterRequest model = new();
+    private string? errorMessage;
+    private bool isBusy;
+    private bool isSuccess;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    { 
+        var authState = await AuthenticationState;
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/home");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/register", model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+                StateHasChanged();
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/login");
+            }
+            else if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                errorMessage = "Registration failed. Please check your input.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Can't reach the server. Please try again later.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

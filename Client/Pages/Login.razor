@@ -1,0 +1,77 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Login</PageTitle>
+
+<div class="card shadow-sm p-4 w-100" style="max-width: 420px;">
+    <h1 class="h3 text-center mb-4">Login</h1>
+
+    <EditForm Model="model" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <InputText id="username" class="form-control" autocomplete="username" @bind-Value="model.Username" />
+            <ValidationMessage For="() => model.Username" />
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <InputText id="password" type="password" class="form-control" autocomplete="current-password" @bind-Value="model.Password" />
+            <ValidationMessage For="() => model.Password" />
+        </div>
+
+        <div class="form-check mb-3">
+            <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="model.RememberMe" />
+            <label for="rememberMe" class="form-check-label">Remember me</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" disabled="@isBusy">
+            @(isBusy ? "Logging in..." : "Log in")
+        </button>
+    </EditForm>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger mt-3 mb-0">@errorMessage</div>
+    }
+
+    <p class="text-center mt-3 mb-0">
+        Don't have an account? <a href="register">Register</a>
+    </p>
+</div>
+
+@code {
+    private LoginRequest model = new();
+    private string? errorMessage;
+    private bool isBusy;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationState;
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/home");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isBusy = true;
+        errorMessage = null;
+
+        errorMessage = await AuthStateProvider.LoginAsync(model);
+
+        if (errorMessage == null)
+        {
+            Navigation.NavigateTo("/home");
+        }
+
+        isBusy = false;
+    }
+}
