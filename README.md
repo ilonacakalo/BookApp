@@ -71,11 +71,24 @@ dotnet ef database update --project WebAPI
 
 ### Running the application
 
+The solution has two projects that must run at the same time: **WebAPI** (backend) and **Client** (Blazor WebAssembly frontend). Run each in its own terminal from the folder with `BookApp.sln`:
+
 ```bash
 dotnet run --project WebAPI
+dotnet run --project Client
 ```
 
-or press **Run** in Visual Studio. Swagger UI is available at `https://localhost:<port>/swagger` (the port is printed in the console).
+or in Visual Studio right-click the solution, choose **Configure Startup Projects**, select **Multiple startup projects** and set both **WebAPI** and **Client** to **Start**.
+
+| Project | URL |
+|---|---|
+| WebAPI (Swagger UI) | `http://localhost:5163/swagger` |
+| Client | `http://localhost:5218` |
+
+These ports are fixed in each project's `Properties/launchSettings.json`. If you change one, also update:
+
+* `Client/wwwroot/appsettings.json` → `ApiBaseUrl` (where the client sends requests)
+* `WebAPI/appsettings.json` → `Cors:AllowedOrigins` (which client address the API accepts)
 
 ## Git workflow
 

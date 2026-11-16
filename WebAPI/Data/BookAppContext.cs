@@ -15,8 +15,14 @@ namespace WebAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("Users");
+                entity.Property(u => u.Username).HasMaxLength(50);
+                entity.Property(u => u.Email).HasMaxLength(256);
+                entity.HasIndex(u => u.Username).IsUnique();
+                entity.HasIndex(u => u.Email).IsUnique();
+            });
         }
-
     }
 }
