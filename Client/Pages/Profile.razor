@@ -1,0 +1,146 @@
+﻿@page "/profile"
+@attribute [Authorize]
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Authorization
+@using Client.Models
+@using Client.Services
+@inject HttpClient Http
+@inject AuthStateProvider AuthState
+
+<PageTitle>Profile</PageTitle>
+
+<div class="card shadow-sm p-4 w-100" style="max-width: 420px;">
+    <h1 class="h3 text-center mb-4">Profile</h1>
+
+    @if (loading)
+    {
+        <p class="text-center mb-0">Loading...</p>
+    }
+    else
+    {
+        <EditForm Model="profile" OnValidSubmit="SaveProfileAsync">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="profile.Username" />
+                <ValidationMessage For="() => profile.Username" />
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="profile.Email" />
+                <ValidationMessage For="() => profile.Email" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Save changes</button>
+
+            @if (!string.IsNullOrEmpty(profileMessage))
+            {
+                <div class="alert alert-info mt-3 mb-0">@profileMessage</div>
+            }
+        </EditForm>
+
+        <hr class="my-4" />
+
+        <h2 class="h5 mb-3">Change password</h2>
+
+        <EditForm Model="password" OnValidSubmit="ChangePasswordAsync">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current password</label>
+                <InputText id="currentPassword" type="password" class="form-control" autocomplete="current-password" @bind-Value="password.CurrentPassword" />
+                <ValidationMessage For="() => password.CurrentPassword" />
+            </div>
+
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">New password</label>
+                <InputText id="newPassword" type="password" class="form-control" autocomplete="new-password" @bind-Value="password.NewPassword" />
+                <ValidationMessage For="() => password.NewPassword" />
+            </div>
+
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Repeat new password</label>
+                <InputText id="confirmPassword" type="password" class="form-control" autocomplete="new-password" @bind-Value="password.ConfirmPassword" />
+                <ValidationMessage For="() => password.ConfirmPassword" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Change password</button>
+
+            @if (!string.IsNullOrEmpty(passwordMessage))
+            {
+                <div class="alert alert-info mt-3 mb-0">@passwordMessage</div>
+            }
+        </EditForm>
+
+        <p class="text-center mt-3 mb-0"><a href="home">Back to home</a></p>
+    }
+</div>
+@code {
+    private UpdateProfileRequest profile = new();
+    private ChangePasswordRequest password = new();
+    private bool loading = true;
+    private string? profileMessage;
+    private string? passwordMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await Http.GetFromJsonAsync<UserResponse>("api/me");
+            if (user != null)
+            {
+                profile = new UpdateProfileRequest { Username = user.Username, Email = user.Email };
+            }
+        }
+        catch (HttpRequestException)
+        {
+            profileMessage = "Can't reach the server. Please try again later.";
+        }
+
+        loading = false;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/profile", profile);
+            if (response.IsSuccessStatusCode)
+            {
+                await AuthState.RefreshAsync();
+                profileMessage = "Profile saved.";
+            }
+            else
+            {
+                profileMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            profileMessage = "Can't reach the server. Please try again later.";
+        }
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/profile/change-password", password);
+            if (response.IsSuccessStatusCode)
+            {
+                passwordMessage = "Password changed.";
+                password = new ChangePasswordRequest();
+            }
+            else
+            {
+                passwordMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            passwordMessage = "Can't reach the server. Please try again later.";
+        }
+    }
+}

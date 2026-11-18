@@ -61,6 +61,10 @@ public class AuthStateProvider : AuthenticationStateProvider
 
         SetState(Anonymous);
     }
+    public async Task RefreshAsync()
+    {
+        SetState(await LoadCurrentUserAsync());
+    }
 
     private async Task<AuthenticationState> LoadCurrentUserAsync()
     {
